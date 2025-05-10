@@ -12,5 +12,8 @@ function creatWindow() {
             contextIsolation: true,
             sandbox: true
         }
-    })
+    });
+    win.loadURL('http://localhost:5173');
 }
+
+app.whenReady().then(creatWindow);
