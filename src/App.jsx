@@ -1,8 +1,9 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import io from 'socket.io-client';
 import { P2PProvider } from './contexts/P2PContext';
 import Home from './pages/Home';
 import Room from './pages/Room';
+import { TransferProvider } from './contexts/TransferContext';
 
 const socket = io('http://localhost:5000');
 const config = {
@@ -11,14 +12,16 @@ const config = {
 
 function App() {
   return (
-    <P2PProvider  socket={socket} config={config}>
-      <BrowserRouter>
-        <Routes>
-          <Route path='/' element={<Home />} />
-          <Route path='/room/:id' element={<Room />} />
-        </Routes>
-      </BrowserRouter>
-    </P2PProvider>
+    <TransferProvider>
+      <P2PProvider socket={socket} config={config}>
+        <Router>
+          <Routes>
+            <Route path='/' element={<Home />} />
+            <Route path='/room/:roomId' element={<Room />} />
+          </Routes>
+        </Router>
+      </P2PProvider>
+    </TransferProvider>
   )
 }
 

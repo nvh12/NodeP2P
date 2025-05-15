@@ -1,50 +1,81 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { useP2P } from "../contexts/P2PContext";
+import { useParams, useNavigate } from 'react-router-dom';
+import { useP2P } from '../contexts/P2PContext';
+import { useTransfer } from '../contexts/TransferContext';
 
 function Room() {
     const [file, setFile] = useState(null);
-    const { peerRef, dataChannelRef } = useP2P();
-    const { id } = useParams();
+    const [peerList, setPeerList] = useState([]);
+    const { sendFile, dataChannelRef } = useTransfer();
+    const { joinRoom, leaveRoom, peerRef } = useP2P();
+    const { roomId } = useParams();
+    const navigate = useNavigate();
+
+    const hasOpenChannels =
+        dataChannelRef.current[roomId] &&
+        Object.values(dataChannelRef.current[roomId]).some(dc => dc.readyState === 'open');
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
     };
 
-    const sendFile = () => {
-        if (!file || !dataChannelRef.current || dataChannelRef.current.readyState !== 'open') {
-            console.warn('No file or data channel not open');
+    const send = () => {
+        if (!file) {
+            console.error('No file');
             return;
         }
 
-        const chunkSize = 64 * 1024;
-        const reader = new FileReader();
-        let offset = 0;
-
-        reader.onload = (e) => {
-            dataChannelRef.current.send(e.target.result);
-            offset += e.target.result.byteLength;
+        const channels = dataChannelRef.current[roomId];
+        if (!channels || Object.keys(channels).length === 0) {
+            console.warn('No connected peers to send file to');
+            return;
         }
 
-        if (offset < file.size) {
-            readChunk(offset);
-        } else {
-            console.log('File sent');
-            dataChannelRef.current.send(JSON.stringify({ done: true, name: file.name}));
+        for (const peerId in dataChannelRef.current[roomId]) {
+            sendFile({ file, roomId, peerId });
         }
+    }
+
+    const handleLeave = () => {
+        leaveRoom(roomId);
+        navigate('/');
     };
 
-    const readChunk = (o) => {
-        const chunk = file.slice(o, o + chunkSize);
-        reader.readAsArrayBuffer(slice);
-    }
-    
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const peers = peerRef.current[roomId]
+                ? Object.keys(peerRef.current[roomId])
+                : [];
+
+            setPeerList(prev =>
+                JSON.stringify(prev) !== JSON.stringify(peers) ? peers : prev
+            );
+        }, 500);
+
+        return () => clearInterval(interval);
+    }, [roomId]);
+
     return (
         <div>
-            <input type="file" onChange={handleFileChange} />
-            <button onClick={sendFile}>Send File</button>
+            <input type='file' onChange={handleFileChange} />
+            <button onClick={handleLeave}>Leave Room</button>
+            <button onClick={() => navigate('/')}>Home</button>
+            <div>
+                <h4>Connected Peers:</h4>
+                {peerList.length === 0 ? (
+                    <p>No peers connected.</p>
+                ) : (
+                    <ul>
+                        {peerList.map(peerId => (
+                            <li key={peerId}>{peerId}</li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+            {file && <p>Selected: {file.name}</p>}
+            <button onClick={() => send()} disabled={!file || !hasOpenChannels}>Send File</button>
         </div>
-    )
+    );
 }
 
 export default Room;
