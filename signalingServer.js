@@ -1,8 +1,19 @@
 import { Server } from 'socket.io';
 import http from 'http';
 
-const server = http.createServer();
-const io = new Server(server, { cors: { origin: '*' } });
+const server = http.createServer((req, res) => {
+    if (req.method === 'GET' && req.url === '/') {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end('Socket.IO signaling server is running.\n');
+    }
+});
+
+const io = new Server(server, {
+    cors: {
+        origin: '*',
+        methods: ['GET']
+    }
+});
 
 io.on('connection', socket => {
     console.log('Socket connected: ', socket.id);

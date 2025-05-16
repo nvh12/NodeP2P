@@ -22,7 +22,11 @@ export const P2PProvider = ({ children, socket, config }) => {
         let peerReadyHandled = false;
 
         socket.on('connect', () => {
-            console.log('Connected');
+            console.log('Client connected with ID:', socket.id);
+        });
+
+        socket.on('connect_error', (err) => {
+            console.error('Connection error:', err);
         });
 
         socket.on('peer-ready', async ({ roomId, peerIds }) => {

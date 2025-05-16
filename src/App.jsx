@@ -5,7 +5,7 @@ import Home from './pages/Home';
 import Room from './pages/Room';
 import { TransferProvider } from './contexts/TransferContext';
 
-const socket = io('http://localhost:5000');
+const socket = io(import.meta.env.VITE_SERVER_URL);
 const config = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
 };
