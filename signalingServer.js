@@ -53,10 +53,12 @@ io.on('connection', socket => {
 
     socket.on('disconnect', () => {
         for (const roomId of socket.rooms) {
-            socket.to(roomId).emit('peer-left', {
-                roomId: roomId,
-                peerId: socket.id
-            });
+            if (roomId !== socket.id) {
+                socket.to(roomId).emit('peer-left', {
+                    roomId: roomId,
+                    peerId: socket.id
+                });
+            }
         }
     });
 });

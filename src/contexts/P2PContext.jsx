@@ -83,7 +83,7 @@ export const P2PProvider = ({ children, socket, config }) => {
             }
         });
 
-        socket.on('peer-left', (roomId, peerId) => {
+        socket.on('peer-left', ({ roomId, peerId }) => {
             console.log(`${peerId} left roomRef ${roomId}`);
 
             if (peerRef.current[roomId][peerId]) {
@@ -95,7 +95,6 @@ export const P2PProvider = ({ children, socket, config }) => {
                 dataChannelRef.current[roomId][peerId].close();
                 delete dataChannelRef.current[roomId][peerId];
             }
-
 
         });
 
